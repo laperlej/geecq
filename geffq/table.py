@@ -3,416 +3,420 @@ Created on January 25, 2014
 
 @author: Jonathan Laperle(jonathan.laperle@usherbrooke.ca)
 """
+import csv
 import geffq.others as others
 
 class Table(object):
     """Used to generate .TAB tables from fastqc/sam/meta files
-    
+
     Attributes:
         matchedList:
         path: output path
     """
-    def __init__(self, matchedLists, path):
-        self.matchedLists = matchedLists
-        self.path = path
+    def __init__(self, matchedLists, out_path):
+        self.matched_lists = matchedLists
+        self.out_path = out_path
+        self.short_csv = self.open_csv('tableShort.tab')
+        self.long_csv = self.open_csv('tableLong.tab')
 
-    def main(self):
-        """Matches the different lists with one another, based on filename
-            and generates the tables
+    def open_csv(self, file_name):
+        """opens a file and returns a csv writer
         """
-        self.writeHeaderShort()
-        self.writeHeaderLong()
-        
-        for matchedList in self.matchedLists:
-            self.writeTableShort(matchedList[0], matchedList[1], matchedList[2], matchedList[3])
-            self.writeTableLong(matchedList[0], matchedList[1], matchedList[2], matchedList[3])
+        return csv.writer(open(self.out_path + file_name, 'w'),
+                          dialect='excel-tab')
 
-    def maxQual(self):
+    def max_qual(self):
         """Maxmimal quality value for all fastqc objects
         """
-        return max([max([len(qc.qual) for qc in [row[0] for row in self.matchedLists]]),
-                max([len(qc.qual) for qc in [row[1] for row in self.matchedLists]])])
+        return max([max([len(qc.qual) for qc in \
+            [row[0] for row in self.matched_lists]]), \
+            max([len(qc.qual) for qc in \
+            [row[1] for row in self.matched_lists]])])
 
-    def minLength(self):
+    def min_length(self):
         """Minimal length for all fastqc objects
         """
         temp = []
         for i in range(2):
-            for qc in [row[i] for row in self.matchedLists]:
-                if qc.fileName:
-                    temp.append(qc.seqLength[0][0])
-        return max(temp)
-    
-    def maxLength(self):
+            for fastqc in [row[i] for row in self.matched_lists]:
+                if fastqc.name:
+                    temp.append(fastqc.seq_length[0][0])
+        return min(temp)
+
+    def max_length(self):
         """Maximal length for all fastqc objects in fastqcList
         """
         temp = []
         for i in range(2):
-            for qc in [row[i] for row in self.matchedLists]:
-                if qc.fileName:
-                    temp.append(qc.seqLength[-1][0])
+            for fastqc in [row[i] for row in self.matched_lists]:
+                if fastqc.name:
+                    temp.append(fastqc.seq_length[-1][0])
         return max(temp)
 
-    def writeHeaderShort(self):
+    def write_header_short(self):
         """Writes the header for the short table file
         """
-        s = 'File Name\t'
-        s += 'Library Name\t'
-        s += 'nb Sequences\t'
-        s += 'nb Sequences (trimmed)\t'
-        s += 'GC content(%)\t'
-        s += 'GC content(%) (trimmed)\t'
-        s += 'Mean quality score of first 10 bases\t'
-        s += 'Mean quality score of last 10 bases\t'
-        s += 'Mean quality score of first 10 bases (trimmed)\t'
-        s += 'Mean quality score of last 10 bases (trimmed)\t'
-        s += 'mode for average quality\t'
-        s += '% of sequences with the mode\t'
-        s += 'mode for average quality (trimmed)\t'
-        s += '% of sequences with the mode (trimmed)\t'
-        s += 'mode for sequence length\t'
-        s += '% of sequences with the mode\t'
-        s += 'mode for sequence length (trimmed)\t'
-        s += '% of sequences with the mode (trimmed)\t'
-        s += '% Duplication\t'
-        s += '% Duplication (trimmed)\t'
-        s += 'MAPQ >= 20 (%)\t'
-        s += 'MAPQ >= 20\t'
-        s += '20 > MAPQ >= 3 (%)\t'
-        s += '20 > MAPQ >= 3\t'
-        s += 'MAPQ < 3 or unmapped (%)\t'
-        s += 'MAPQ < 3 or unmapped\n'
-        
-        f = open(self.path + 'tableShort.tab', 'w')
-        f.write(s)
-        f.close()
-        
-    def firstHeaderLevel(self):
-        """Generates the first level for the long table's header
-        
-        Returns:
-            the header as a string
-        """
-        s = 'General information' + multiTabs(12)
-        for _i in range(2):
-            s += 'Per base sequence quality' + multiTabs(20)
-        for _i in range(2):
-            s += 'Number of sequences per quality score' + multiTabs(self.maxQual())
-        for _i in range(2):
-            s += 'Sequence Length Distribution' + multiTabs(self.maxLength() - self.minLength()+1)
-        for _i in range(2):
-            s += 'Sequences duplication levels' + multiTabs(11)
-        s += 'MAPQ' + multiTabs(11)
-        s += '\n'
-        return s
-    
-    def secondHeaderLevel(self):
-        """Generates the second level for the long table's header
-        
-        Returns:
-            the header as a string
-        """
-        #General information
-        s = 'File Name\t'
-        s += 'nb Sequences\t'
-        s += 'nb Sequences (trimmed)\t'
-        s += 'GC content(%)\t'
-        s += 'GC content(%) (trimmed)\t'
-        s += 'Instrument\t'
-        s += 'Alias\t'
-        s += 'Organism\t'
-        s += 'Library Name\t'
-        s += 'Library Strategy\t'
-        s += 'Library Layout\t'
-        s += 'Submissions\t'
-        
-        #Per base sequence quality
-        s += 'Untrimmed'+ multiTabs(20)
-        s += 'Trimmed'+ multiTabs(20)
-        
-        #Per sequence quality scores
-        s += 'Untrimmed'+ multiTabs(self.maxQual())
-        s += 'Trimmed'+ multiTabs(self.maxQual())
-            
-        #Sequence Length Distribution
-        s += 'Untrimmed\t'+ multiTabs(self.maxLength() - self.minLength())
-        s += 'Trimmed\t'+ multiTabs(self.maxLength() - self.minLength())
-            
-        #Sequences duplication levels
-        s += 'Untrimmed\t'+ multiTabs(10)
-        s += 'Trimmed\t'+ multiTabs(10)
-        
-        #MAPQ
-        s += multiTabs(12)
-        s += '\n'
-        
-        return s
-    
-    def thirdHeaderLevel(self):
-        """Generates the third level for the long table's header
-        
-        Returns:
-            the header as a string
-        """
-        #General information
-        s = multiTabs(12)
-        
-        #Per base sequence quality
-        for i in range(2):
-            for i in range(10):
-                s += str(i+1) + '\t'
-            for i in range(10):
-                s += str(i-10) + '\t'
-            
-        #Per sequence quality scores
-        for i in range(2):
-            for i in range(self.maxQual()):
-                s += str(i) + '\t'
-            
-        #Sequence Length Distribution
-        for i in range(2):
-            for i in range(self.minLength(), self.maxLength()+1):
-                s += str(i) + '\t'
-            
-        #Sequences duplication levels
-        for i in range(2):
-            s += 'Total\t'
-            for i in range(9):
-                s += str(i+1) + '\t'
-            s += '10++\t'
-        
-        #MAPQ
-        s += "MAPQ >= 30 (%)" + '\t'
-        s += "MAPQ >= 30" + '\t'
-        s += "MAPQ >= 20 (%)" + '\t'
-        s += "MAPQ >= 20" + '\t'
-        s += "MAPQ >= 10 (%)" + '\t'
-        s += "MAPQ >= 10" + '\t'
-        s += "MAPQ >= 3 (%)" + '\t'
-        s += "MAPQ >= 3" + '\t'
-        s += "MAPQ < 3 (%)" + '\t'
-        s += "MAPQ < 3" + '\t'
-        s += "Unmapped (%)" + '\t'
-        s += "Unmapped" + '\t'
-        s += '\n'
-        
-        return s
-    
-    def writeHeaderLong(self):
+        short_header = ['File Name',
+                        'Library Name',
+                        'nb Sequences',
+                        'nb Sequences (trimmed)',
+                        'GC content(%)',
+                        'GC content(%) (trimmed)',
+                        'Mean quality score of first 10 bases',
+                        'Mean quality score of last 10 bases',
+                        'Mean quality score of first 10 bases (trimmed)',
+                        'Mean quality score of last 10 bases (trimmed)',
+                        'mode for average quality',
+                        '% of sequences with the mode',
+                        'mode for average quality (trimmed)',
+                        '% of sequences with the mode (trimmed)',
+                        'mode for sequence length',
+                        '% of sequences with the mode',
+                        'mode for sequence length (trimmed)',
+                        '% of sequences with the mode (trimmed)',
+                        '% Duplication',
+                        '% Duplication (trimmed)',
+                        'MAPQ >= 20 (%)',
+                        'MAPQ >= 20',
+                        '20 > MAPQ >= 3 (%)',
+                        '20 > MAPQ >= 3',
+                        'MAPQ < 3 or unmapped (%)',
+                        'MAPQ < 3 or unmapped']
+
+        self.short_csv.writerow(short_header)
+
+    def write_header_long(self):
         """writes the header for the long table file
         """
-        others.writeFile(self.path + 'tableLong.tab', self.firstHeaderLevel()+
-                                                      self.secondHeaderLevel()+
-                                                      self.thirdHeaderLevel())
-    
-    def searchName(self, qcbefore, qcafter, sam, meta):
-        """Finds a filename to be used by tables
-        
-        the order is the same as the order in MatchedLists sublists
-        
+        self.long_csv.writerow(self.first_header_level())
+        self.long_csv.writerow(self.second_header_level())
+        self.long_csv.writerow(self.third_header_level())
+
+    def first_header_level(self):
+        """Generates the first level for the long table's header
+
+        Returns:
+            the header as a string
+        """
+        first_header = []
+        first_header.append('General information')
+        first_header += empty_slot(11)
+        for _ in range(2):
+            first_header.append('Per base sequence quality')
+            first_header += empty_slot(19)
+        for _ in range(2):
+            first_header.append('Number of sequences per quality score')
+            first_header += empty_slot(self.max_qual()-1)
+        for _ in range(2):
+            first_header.append('Sequence Length Distribution')
+            first_header += empty_slot(self.max_length() - self.min_length())
+        for _ in range(2):
+            first_header.append('Sequences duplication levels')
+            first_header += empty_slot(10)
+        first_header.append('MAPQ')
+        first_header += empty_slot(11)
+        return first_header
+
+    def second_header_level(self):
+        """Generates the second level for the long table's header
+
+        Returns:
+            the header as a string
+        """
+        #General information
+        second_header = ['File Name',
+                         'nb Sequences',
+                         'nb Sequences (trimmed)',
+                         'GC content(%)',
+                         'GC content(%) (trimmed)',
+                         'Instrument',
+                         'Alias',
+                         'Organism',
+                         'Library Name',
+                         'Library Strategy',
+                         'Library Layout',
+                         'Submissions']
+        #in order:
+        #Per base sequence quality
+        #Per sequence quality scores
+        #Sequence Length Distribution
+        #Sequences duplication levels
+        for nb_empty in [19,
+                         self.max_qual() - 1,
+                         self.max_length() - self.min_length(),
+                         10]:
+            second_header += ['Untrimmed'] + empty_slot(nb_empty)
+            second_header += ['Trimmed'] + empty_slot(nb_empty)
+
+        #MAPQ
+        second_header += empty_slot(12)
+
+        return second_header
+
+    def third_header_level(self):
+        """Generates the third level for the long table's header
+
+        Returns:
+            the header as a string
+        """
+        third_header = []
+
+        #General information
+        third_header += empty_slot(12)
+
+        #Per base sequence quality
+        for _ in range(2):
+            third_header += [str(i+1) for i in range(10)]
+            third_header += [str(i-10) for i in range(10)]
+
+        #Per sequence quality scores
+        for _ in range(2):
+            third_header += [str(i) for i in range(self.max_qual())]
+
+        #Sequence Length Distribution
+        for _ in range(2):
+            third_header += [str(i) for i in range(self.min_length(),
+                                                   self.max_length()+1)]
+
+        #Sequences duplication levels
+        for i in range(2):
+            third_header.append('Total')
+            third_header += [str(i+1) for i in range(9)]
+            third_header.append('10++')
+
+        #MAPQ
+        third_header += ["MAPQ >= 30 (%)",
+                         "MAPQ >= 30",
+                         "MAPQ >= 20 (%)",
+                         "MAPQ >= 20",
+                         "MAPQ >= 10 (%)",
+                         "MAPQ >= 10",
+                         "MAPQ >= 3 (%)",
+                         "MAPQ >= 3",
+                         "MAPQ < 3 (%)",
+                         "MAPQ < 3",
+                         "Unmapped (%)",
+                         "Unmapped"]
+
+        return third_header
+
+    def write_table_short(self, matched_list):
+        """Appends the content of the short table for matching
+        before/after/sam/meta files
+
         Args:
             qcbefore:Fastqc object before trimming
             qcafter: Fastqc object after trimming
             sam: Sam object
             meta: Meta object
-        
-        Returns: a filename
         """
-        if qcbefore.fileName:
-            name = qcbefore.fileName
-        elif qcafter.fileName:
-            name = qcafter.fileName
-        elif sam.name:
-            name = sam.name
-        elif meta.name:
-            name = meta.name
-        else:
-            name = '-'
-        return name
-    
-    def writeTableShort(self, qcbefore, qcafter, sam, meta):
-        """Appends the content of the short table for matching before/after/sam/meta files
-        
-        Args:
-            qcbefore:Fastqc object before trimming
-            qcafter: Fastqc object after trimming
-            sam: Sam object
-            meta: Meta object
-        """
-        fastqcs = [qcbefore, qcafter]
-        
+        fastqcs = [matched_list[0], matched_list[1]]
+        sam = matched_list[2]
+        meta = matched_list[3]
+        empty = ['-']
         #File name
-        output = self.searchName(qcbefore, qcafter, sam, meta) + '\t'
-        
+        output = [search_name(matched_list)]
+
         #Library name
         if meta.meta:
-            output += meta.meta['Library name'] + '\t'
+            output.append(meta.meta['Library name'])
         else:
-            output += '-\t'
+            output += empty
 
         #nb sequences
         for fastqc in fastqcs:
-            if fastqc.nbSequences:
-                output += str(fastqc.nbSequences) + '\t'
+            if fastqc.nb_sequences:
+                output.append(str(fastqc.nb_sequences))
             else:
-                output += '-\t'
+                output += empty
 
         #GC content
         for fastqc in fastqcs:
-            if fastqc.gcContent:
-                output += str(fastqc.gcContent) + '\t'
+            if fastqc.gc_content:
+                output.append(str(fastqc.gc_content))
             else:
-                output += '-\t'
+                output += empty
 
         #Average base sequence quality for first and last 10 bases
         for fastqc in fastqcs:
-            if fastqc.posQuality:
-                output += str(others.mean(fastqc.posQuality[:10])) + '\t'
-                output += str(others.mean(fastqc.posQuality[-10:])) + '\t'
+            if fastqc.pos_quality:
+                output.append(str(others.mean(fastqc.pos_quality[:10])))
+                output.append(str(others.mean(fastqc.pos_quality[-10:])))
             else:
-                output += '-\t-\t'
+                output += empty * 2
 
         #Mode for sequence quality scores and how many sequences ahve the mode
         #in absolute and %
         for fastqc in fastqcs:
             if fastqc.qual:
                 i = others.argmax(fastqc.qual)
-                output += str(i) + '\t'
-                output += str(fastqc.qual[i]/sum(fastqc.qual)) + '\t'
+                output += [str(i)]
+                output += [str(fastqc.qual[i]/sum(fastqc.qual))]
             else:
-                output += '-\t-\t'
+                output += empty * 2
 
         #Mode for sequence lengthand how many sequences ahve the mode
         #in absolute and %
         for fastqc in fastqcs:
-            if fastqc.seqLength:
-                i = others.argmax([row[1] for row in fastqc.seqLength])
-                output += str(fastqc.seqLength[i][0]) + '\t'
-                output += str(fastqc.seqLength[i][1]/sum([row[1] for row in fastqc.seqLength])) + '\t'
+            if fastqc.seq_length:
+                i = others.argmax([row[1] for row in fastqc.seq_length])
+                output += [str(fastqc.seq_length[i][0])]
+                output += [str(fastqc.seq_length[i][1]/\
+                           sum([row[1] for row in fastqc.seq_length]))]
             else:
-                output += '-\t-\t'
+                output += empty * 2
 
         #Total duplication levels (%)
         for fastqc in fastqcs:
             if fastqc.dup:
-                output += str(fastqc.dup[0]) + '\t'
+                output += [str(fastqc.dup[0])]
             else:
-                output += '-\t'
-        
+                output += empty * 2
+
         #MAPQ, joins each category 2 at a time
-        if sam.MAPQ:
+        if sam.mapq:
             for i in range(3):
-                output += str(float(sam.MAPQ[2*i][0]) + float(sam.MAPQ[2*i+1][0])) + '\t'
-                output += str(int(sam.MAPQ[2*i][1]) + int(sam.MAPQ[2*i+1][1])) + '\t'
+                output += [str(float(sam.mapq[2*i][0]) + \
+                           float(sam.mapq[2*i+1][0]))]
+                output += [str(int(sam.mapq[2*i][1]) + \
+                           int(sam.mapq[2*i+1][1]))]
         else:
-            for i in range(6):
-                output += '-\t'
+            output += empty * 6
 
-        others.appendFile(self.path+'tableShort.tab', output[:-1] + '\n')
+        self.short_csv.writerow(output)
 
-    def writeTableLong(self, qcbefore, qcafter, sam, meta):
-        """Appends the content of the short table for matching before/after/sam/meta files
-        
+    def write_table_long(self, matched_list):
+        """Appends the content of the short table for matching
+        before/after/sam/meta files
+
         Args:
             qcbefore:Fastqc object before trimming
             qcafter: Fastqc object after trimming
             sam: Sam object
             meta: Meta object
         """
-        fastqcs = [qcbefore, qcafter]
-        
+        fastqcs = [matched_list[0], matched_list[1]]
+        sam = matched_list[2]
+        meta = matched_list[3]
+        empty = ['-']
+
         #File name
-        output = self.searchName(qcbefore, qcafter, sam, meta) + '\t'
-        
+        output = [search_name(matched_list)]
+
         #nb sequences
         for fastqc in fastqcs:
-            if fastqc.nbSequences:
-                output += str(fastqc.nbSequences) + '\t'
+            if fastqc.nb_sequences:
+                output += [str(fastqc.nb_sequences)]
             else:
-                output += '-\t'
+                output += empty
 
         #GC content
         for fastqc in fastqcs:
-            if fastqc.gcContent:
-                output += str(fastqc.gcContent) + '\t'
+            if fastqc.gc_content:
+                output += [str(fastqc.gc_content)]
             else:
-                output += '-\t'
+                output += empty
 
         #Meta data
         if meta.meta:
-            output += meta.meta['Instrument'] + '\t'
-            output += meta.meta['Alias'] + '\t'
-            output += meta.meta['Organism'] + '\t'
-            output += meta.meta['Library name'] + '\t'
-            output += meta.meta['Library strategy'] + '\t'
-            output += meta.meta['Library layout'] + '\t'
-            output += meta.meta['Submissions'] + '\t'
+            output += [meta.meta['Instrument']]
+            output += [meta.meta['Alias']]
+            output += [meta.meta['Organism']]
+            output += [meta.meta['Library name']]
+            output += [meta.meta['Library strategy']]
+            output += [meta.meta['Library layout']]
+            output += [meta.meta['Submissions']]
         else:
-            for i in range(7):
-                output += '-\t'
-            
+            output += empty * 7
+
         #Per base sequence quality
         for fastqc in fastqcs:
-            if fastqc.posQuality:
-                for i in fastqc.posQuality[:10]:
-                    output += str(i) + '\t'
-                for i in fastqc.posQuality[-10:]:
-                    output += str(i) + '\t'
+            if fastqc.pos_quality:
+                for i in fastqc.pos_quality[:10]:
+                    output += [str(i)]
+                for i in fastqc.pos_quality[-10:]:
+                    output += [str(i)]
             else:
-                for i in range(20):
-                    output += '-\t'
+                output += empty * 20
 
         #Per sequence quality scores
         for fastqc in fastqcs:
-            for i in range(self.maxQual()):
+            for i in range(self.max_qual()):
                 if fastqc.qual:
                     if i < len(fastqc.qual):
-                        output += str(fastqc.qual[i]) + '\t'
+                        output += [str(fastqc.qual[i])]
                     else:
-                        output += '0\t'
+                        output += ['0']
                 else:
-                    output += '-\t'
-        
+                    output += empty
+
         #Sequence Length Distribution
         for fastqc in fastqcs:
-            for i in range(self.minLength(), self.maxLength()+1):
-                if fastqc.seqLength:
-                    if i in [row[0] for row in fastqc.seqLength]:
-                        output += str(fastqc.seqLength[[row[0] for row in fastqc.seqLength].index(i)][1]) + '\t'
+            for i in range(self.min_length(), self.max_length()+1):
+                if fastqc.seq_length:
+                    if i in [row[0] for row in fastqc.seq_length]:
+                        temp = [row[0] for row in fastqc.seq_length]
+                        temp2 = fastqc.seq_length[temp.index(i)][1]
+                        output += [str(temp2)]
                     else:
-                        output += '0\t'
+                        output += ['0']
                 else:
-                    output += '-\t'
+                    output += empty
 
         #Sequences duplication levels
         for fastqc in fastqcs:
             if fastqc.dup:
                 for i in fastqc.dup:
-                    output += str(i) + '\t'
+                    output += [str(i)]
             else:
-                for i in range(11):
-                    output += '-\t'
+                output += empty * 11
 
         #MAPQ >=30, >=20, >=10, >=3, < 3, Unmapped  (nb)
-        if sam.MAPQ:
+        if sam.mapq:
             for i in range(6):
-                output += '%s\t%s\t' % (float(sam.MAPQ[i][0]), int(sam.MAPQ[i][1]))
+                output += [float(sam.mapq[i][0]), int(sam.mapq[i][1])]
         else:
             for i in range(6):
-                output += '-\t-\t'
+                output += empty*2
 
-        others.appendFile(self.path + 'tableLong.tab', output[:-1] + '\n')
-        
-def multiTabs(i):
-    """Chains multiple tabs in a row as a string
-    
+        self.long_csv.writerow(output)
+
+    def main(self):
+        """Matches the different lists with one another, based on filename
+            and generates the tables
+        """
+        self.write_header_short()
+        self.write_header_long()
+
+        for matched_list in self.matched_lists:
+            self.write_table_short(matched_list)
+            self.write_table_long(matched_list)
+
+
+def search_name(matched_list):
+    """Finds a filename to be used by tables
+    the order is the same as the order in MatchedLists sublists
+
     Args:
-        i: number of tabs
-    
-    Returns:
-        s: result string
+        matched_list:
+            list of the following items:
+                qcbefore:Fastqc object before trimming
+                qcafter: Fastqc object after trimming
+                sam: Sam object
+                meta: Meta object
+
+    Returns: a filename
     """
-    s=''
-    for i in range(i):
-        s += '\t'
-    return s
+    name = ''
+    for i in range(4):
+        if not name and matched_list[i].name:
+            name = matched_list[i].name
+    if not name:
+        name = '-'
+    return name
+
+
+def empty_slot(nb_empty):
+    """Return a list of n empty strings
+    """
+    return ['']*nb_empty
