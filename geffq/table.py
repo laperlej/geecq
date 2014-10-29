@@ -100,7 +100,7 @@ class Table(object):
         """
         first_header = []
         first_header.append('General information')
-        first_header += empty_slot(11)
+        first_header += empty_slot(10)
         for _ in range(2):
             first_header.append('Per base sequence quality')
             first_header += empty_slot(19)
@@ -130,11 +130,10 @@ class Table(object):
                          'GC content(%)',
                          'GC content(%) (trimmed)',
                          'Instrument',
-                         'Alias',
                          'Organism',
                          'Library Name',
                          'Library Strategy',
-                         'Library Layout',
+                         'Characteristics',
                          'Submissions']
         #in order:
         #Per base sequence quality
@@ -162,7 +161,7 @@ class Table(object):
         third_header = []
 
         #General information
-        third_header += empty_slot(12)
+        third_header += empty_slot(11)
 
         #Per base sequence quality
         for _ in range(2):
@@ -318,6 +317,8 @@ class Table(object):
                 output += empty
 
         #Meta data
+        """
+        #code for MetaOld
         if meta.meta:
             output += [meta.meta['Instrument']]
             output += [meta.meta['Alias']]
@@ -328,6 +329,17 @@ class Table(object):
             output += [meta.meta['Submissions']]
         else:
             output += empty * 7
+        """
+
+        if meta.meta:
+            output += [meta.meta['instrument_model']]
+            output += [meta.meta['organism_ch1']]
+            output += [meta.meta['title']]
+            output += [meta.meta['library_strategy']]
+            output += [meta.meta['characteristics_ch1']]
+            output += [meta.meta['Submissions']]
+        else:
+            output += empty * 6
 
         #Per base sequence quality
         for fastqc in fastqcs:

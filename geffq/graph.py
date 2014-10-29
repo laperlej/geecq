@@ -69,77 +69,92 @@ class GraphMaker(object):
     def make_per_base_qual_graph(self):
         """Generates the per base quality graph
         """
-        s = 'data<-data.frame(\n\t'
-        for x in range(10):
-            s += "'%s' = c(" % (self.labels[x])
-            for y in [fastqc.pos_quality for fastqc in self.fastqc_list]:
-                s += '%g, ' % (y[x])
-            s = s[:-2] + '),\n\t'
-        for x in range(10):
-            s += "'%s' = c(" % (self.labels[x+10])
-            for y in [fastqc.pos_quality for fastqc in self.fastqc_list]:
-                s += '%g, ' % (y[x-10])
-            s = s[:-2] + '),\n\t'
-        s = s[:-3] + '\n)\n'
-        s += 'data<-data[,order(names(data))]\n'
-        s += "png('"+ self.path +"per_base_quality.png')\nboxplot(data, ylab='Quality score', xlab='Position', names=c('1','2','3','4','5','6','7','8','9','10','-10','-9','-8','-7','-6','-5','-4','-3','-2','-1'))\ndev.off()"
-        self.generate_graph('per_base_quality', s)
+        script = 'data<-data.frame(\n\t'
+        for x_value in range(10):
+            script += "'%s' = c(" % (self.labels[x_value])
+            for y_value in [fastqc.pos_quality for fastqc in self.fastqc_list]:
+                script += '%g, ' % (y_value[x_value])
+            script = script[:-2] + '),\n\t'
+        for x_value in range(10):
+            script += "'%s' = c(" % (self.labels[x_value+10])
+            for y_value in [fastqc.pos_quality for fastqc in self.fastqc_list]:
+                script += '%g, ' % (y_value[x_value-10])
+            script = script[:-2] + '),\n\t'
+        script = script[:-3] + '\n)\n'
+        script += 'data<-data[,order(names(data))]\n'
+        script += "png('" + self.path + "per_base_quality.png')\n"
+        script += "boxplot(data, ylab='Quality score', xlab='Position', " + \
+                  "names=c('1','2','3','4','5','6','7','8','9','10'," + \
+                  "'-10','-9','-8','-7','-6','-5','-4','-3','-2','-1'))\n"
+        script += "dev.off()"
+        self.generate_graph('per_base_quality', script)
 
     def make_per_sequence_qual_graph(self):
         """Generates the Per sequence quality scores graph
         """
-        s = 'data<-data.frame('
+        script = 'data<-data.frame('
         for i in range(self.max_qual()+1):
-            s += "'%s' = c(" % (self.labels[i])
+            script += "'%s' = c(" % (self.labels[i])
             for fastqc in self.fastqc_list:
                 if len(fastqc.qual) > i:
-                    s += '%g, ' % (fastqc.qual[i] / fastqc.nb_sequences)
+                    script += '%g, ' % (fastqc.qual[i] / fastqc.nb_sequences)
                 else:
-                    s += '0, '
-            s = s[:-2] + '),\n\t'
-        s = s[:-3] + '\n)\n'
+                    script += '0, '
+            script = script[:-2] + '),\n\t'
+        script = script[:-3] + '\n)\n'
 
-        s += 'data<-data[,order(names(data))]\n'
-        s += "png('"+ self.path +"per_sequence_quality.png')\nboxplot(data, ylab='nb sequences / total sequences', xlab='Quality score', names=c("
+        script += 'data<-data[,order(names(data))]\n'
+        script += "png('"+ self.path +"per_sequence_quality.png')\n"
+        script += "boxplot(data, ylab='nb sequences / total sequences', " + \
+                  "xlab='Quality score', names=c("
         for i in range(self.max_qual()+1):
-            s += "'%s', " % (i)
-        s = s[:-2] + '))\ndev.off()'
-        self.generate_graph('per_sequence_quality', s)
+            script += "'%s', " % (i)
+        script = script[:-2] + "))\n"
+        script += "dev.off()"
+        self.generate_graph('per_sequence_quality', script)
 
     def make_seq_len_graph(self):
         """Generates the Sequence Length Distribution graph
         """
-        s = 'data<-data.frame('
+        script = 'data<-data.frame('
         for i in range(self.min_length(), self.max_length()+1):
-            s += "'%s' = c(" % (self.labels[i])
+            script += "'%s' = c(" % (self.labels[i])
             for fastqc in self.fastqc_list:
                 if i in [row[0] for row in fastqc.seq_length]:
-                    s += '%g, ' % (fastqc.seq_length[i-fastqc.seq_length[0][0]][1] / fastqc.nb_sequences)
+                    temp = fastqc.seq_length[i-fastqc.seq_length[0][0]][1]
+                    script += '%g, ' % (temp / fastqc.nb_sequences)
                 else:
-                    s += '0, '
-            s = s[:-2] + '),\n\t'
-        s = s[:-3] + '\n)\n'
+                    script += '0, '
+            script = script[:-2] + '),\n\t'
+        script = script[:-3] + '\n)\n'
 
-        s += 'data<-data[,order(names(data))]\n'
-        s += "png('"+self.path+"sequence_length.png')\nboxplot(data, ylab='nb sequences / total sequences', xlab='Length(nucl)', names=c("
+        script += 'data<-data[,order(names(data))]\n'
+        script += "png('"+self.path+"sequence_length.png')\n" + \
+                  "boxplot(data, ylab='nb sequences / total sequences', " + \
+                  "xlab='Length(nucl)', names=c("
         for i in range(self.min_length(), self.max_length()+1):
-            s += "'%s', " % (i)
-        s = s[:-2] + '))\ndev.off()'
-        self.generate_graph('sequence_length', s)
+            script += "'%s', " % (i)
+        script = script[:-2] + "))\n"
+        script += "dev.off()"
+        self.generate_graph('sequence_length', script)
 
     def make_duplication_graph(self):
         """Generates the Sequence Duplication Levels graph
         """
-        s = 'data<-data.frame('
-        for x in range(11):
-            s += "'%s' = c(" % (self.labels[x])
-            for y in [fastqc.dup for fastqc in self.fastqc_list]:
-                s += '%g, ' % (y[x])
-            s = s[:-2] + '),\n\t'
-        s = s[:-3] + '\n)\n'
-        s += 'data<-data[,order(names(data))]\n'
-        s += "png('"+self.path+"sequence_duplication.png')\nboxplot(data, ylab='nb sequences(%)', xlab='Sequence duplication level', names=c('0','1','2','3','4','5','6','7','8','9','10+'))\ndev.off()"
-        self.generate_graph('sequence_duplication', s)
+        script = 'data<-data.frame('
+        for x_value in range(11):
+            script += "'%s' = c(" % (self.labels[x_value])
+            for y_value in [fastqc.dup for fastqc in self.fastqc_list]:
+                script += '%g, ' % (y_value[x_value])
+            script = script[:-2] + '),\n\t'
+        script = script[:-3] + '\n)\n'
+        script += 'data<-data[,order(names(data))]\n'
+        script += "png('"+self.path+"sequence_duplication.png')\n"
+        script += "boxplot(data, ylab='nb sequences(%)', " + \
+                  "xlab='Sequence duplication level', " + \
+                  "names=c('0','1','2','3','4','5','6','7','8','9','10+'))\n"
+        script += "dev.off()"
+        self.generate_graph('sequence_duplication', script)
 
     def generate_all(self):
         """Generates all graphs in path specified by self.path

@@ -6,7 +6,7 @@ Created on January 25, 2014
 
 import re
 
-class Meta(object):
+class MetaOld(object):
     """Used to extract and contain data from a GEO meta data file
 
     Attributes:
@@ -48,7 +48,7 @@ class Meta(object):
         except IOError:
             print 'Could not open ' + file_name
 
-class MetaSoft(object):
+class Meta(object):
     """Used to extract and contain data from a meta data file
 
     Attributes:
@@ -72,7 +72,10 @@ class MetaSoft(object):
             prog = re.compile("!Sample_(.*?) = (.*?)\r\n?|\n")
             if line.startswith("!Sample_"):
                 info = prog.match(line)
-                self.meta[info.groups()[0]] = info.groups()[1]
+                if info.groups()[0] in self.meta:
+                    self.meta[info.groups()[0]] += info.groups()[1]
+                else:
+                    self.meta[info.groups()[0]] = info.groups()[1]
             elif line.startswith("^SAMPLE"):
                 matched_name = re.match(r"\^SAMPLE = (.*?)\r\n?|\n", line)
                 self.name = matched_name.groups()[0]
