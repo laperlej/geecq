@@ -100,7 +100,7 @@ class Table(object):
         """
         first_header = []
         first_header.append('General information')
-        first_header += empty_slot(10)
+        first_header += empty_slot(9)
         for _ in range(2):
             first_header.append('Per base sequence quality')
             first_header += empty_slot(19)
@@ -133,8 +133,7 @@ class Table(object):
                          'Organism',
                          'Library Name',
                          'Library Strategy',
-                         'Characteristics',
-                         'Submissions']
+                         'Characteristics']
         #in order:
         #Per base sequence quality
         #Per sequence quality scores
@@ -161,7 +160,7 @@ class Table(object):
         third_header = []
 
         #General information
-        third_header += empty_slot(11)
+        third_header += empty_slot(10)
 
         #Per base sequence quality
         for _ in range(2):
@@ -218,7 +217,7 @@ class Table(object):
 
         #Library name
         if meta.meta:
-            output.append(meta.meta['Library name'])
+            output.append(meta.meta['title'])
         else:
             output += empty
 
@@ -337,9 +336,8 @@ class Table(object):
             output += [meta.meta['title']]
             output += [meta.meta['library_strategy']]
             output += [meta.meta['characteristics_ch1']]
-            output += [meta.meta['Submissions']]
         else:
-            output += empty * 6
+            output += empty * 5
 
         #Per base sequence quality
         for fastqc in fastqcs:
