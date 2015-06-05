@@ -69,7 +69,7 @@ class Meta(object):
             fileTxt: raw text from a meta data file(string)
         """
         for line in file_txt.split('\n'):
-            prog = re.compile("!Sample_(.*?) = (.*?)\r\n?|\n")
+            prog = re.compile("!Sample_(.*?) = (.*)")
             if line.startswith("!Sample_"):
                 info = prog.match(line)
                 if info.groups()[0] in self.meta:
@@ -77,7 +77,7 @@ class Meta(object):
                 else:
                     self.meta[info.groups()[0]] = info.groups()[1]
             elif line.startswith("^SAMPLE"):
-                matched_name = re.match(r"\^SAMPLE = (.*?)\r\n?|\n", line)
+                matched_name = re.match(r"\^SAMPLE = (.*)", line)
                 self.name = matched_name.groups()[0]
 
     def load_from_file(self, file_name):
