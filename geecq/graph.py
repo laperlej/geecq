@@ -141,6 +141,11 @@ class GraphMaker(object):
     def make_duplication_graph(self):
         """Generates the Sequence Duplication Levels graph
         """
+        fastq_version = self.fastqc_list[0].version
+        if fastq_version >= 11:
+            xlabels = "c('0','1','2','3','4','5','6','7','8','9','>10','>50','>100','>500', '>1k', '>5k', '>10k+')"
+        else:
+            xlabels = "c('0','1','2','3','4','5','6','7','8','9','10+')"
         script = 'data<-data.frame('
         for x_value in range(11):
             script += "'%s' = c(" % (self.labels[x_value])
@@ -152,7 +157,7 @@ class GraphMaker(object):
         script += "png('"+self.path+"sequence_duplication.png')\n"
         script += "boxplot(data, ylab='nb sequences(%)', " + \
                   "xlab='Sequence duplication level', " + \
-                  "names=c('0','1','2','3','4','5','6','7','8','9','10+'))\n"
+                  "names=" + xlabels + ")\n"
         script += "dev.off()"
         self.generate_graph('sequence_duplication', script)
 
