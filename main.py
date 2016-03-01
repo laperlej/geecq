@@ -11,6 +11,7 @@ from geffq.graph import GraphMaker
 import os
 import sys
 import getopt
+import csv
 
 def load_from_input(input_file):
     r"""Loads objects from the filepaths provided in inputFile
@@ -34,6 +35,9 @@ def load_from_input(input_file):
     with open(input_file, 'r') as in_file:
         for line in in_file:
             line = line.split()
+            if len(line) != 4:
+                print "Error: Every line should contain 4 elements"
+                exit(0)
             fastqcs = [Fastqc(), Fastqc()]
             for i in range(2):
                 if line[i] != 'N/A':
@@ -96,6 +100,11 @@ def no_input():
     """
     print 'Input file is empty.'
 
+def write_csv(table, path):
+    csv = csv.writer(open(path, 'w'), dialect='excel-tab')
+    for line in table:
+        csv.writerow(line)
+
 def launch(input_matrix, output_path):
     """Does multiple checks to ensure the list has the nessessary data
     and launches the modules to produce output
@@ -105,20 +114,23 @@ def launch(input_matrix, output_path):
     """
     has_ntrimmed = has_fastqc([row[0] for row in input_matrix])
     has_trimmed = has_fastqc([row[1] for row in input_matrix])
+    output_path = output_path + 'output/'
 
     if has_ntrimmed or has_trimmed:
-        Table(input_matrix, output_path + 'output/').main()
+        table_short, table_long = Table(input_matrix).main()
+        write_csv(table_short, output_path + 'tableShort.tab')
+        write_csv(table_long, output_path + 'tableLong.tab')
     else:
         print 'No valid fastqc file, could not produce tables'
     if has_ntrimmed:
         GraphMaker([row[0] for row in input_matrix],
-                   output_path + 'output/before/').generate_all()
+                   output_path + 'before/').generate_all()
     else:
         print 'No valid untrimmed fastqc file, ' \
               'some graphs will not be produced'
     if has_trimmed:
         GraphMaker([row[1] for row in input_matrix],
-                   output_path + 'output/after/').generate_all()
+                   output_path + 'after/').generate_all()
     else:
         print 'No valid trimmed fastqc file, ' \
               'some graphs will not be produced'

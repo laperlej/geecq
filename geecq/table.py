@@ -3,8 +3,7 @@ Created on January 25, 2014
 
 @author: Jonathan Laperle(jonathan.laperle@usherbrooke.ca)
 """
-import csv
-import geffq.others as others
+import others
 
 class Table(object):
     """Used to generate .TAB tables from fastqc/sam/meta files
@@ -13,19 +12,12 @@ class Table(object):
         matchedList:
         path: output path
     """
-    def __init__(self, matchedLists, out_path):
+    def __init__(self, matchedLists):
         self.matched_lists = matchedLists
-        self.out_path = out_path
-        self.short_csv = self.open_csv('tableShort.tab')
-        self.long_csv = self.open_csv('tableLong.tab')
+        self.short_csv = []
+        self.long_csv = []
 
-    def open_csv(self, file_name):
-        """opens a file and returns a csv writer
-        """
-        return csv.writer(open(self.out_path + file_name, 'w'),
-                          dialect='excel-tab')
-
-    def max_qual(self):
+    def max_qual_(self):
         """Maxmimal quality value for all fastqc objects
         """
         return max([max([len(qc.qual) for qc in \
@@ -33,7 +25,7 @@ class Table(object):
             max([len(qc.qual) for qc in \
             [row[1] for row in self.matched_lists]])])
 
-    def min_length(self):
+    def min_length_(self):
         """Minimal length for all fastqc objects
         """
         temp = []
@@ -43,7 +35,7 @@ class Table(object):
                     temp.append(fastqc.seq_length[0][0])
         return min(temp)
 
-    def max_length(self):
+    def max_length_(self):
         """Maximal length for all fastqc objects in fastqcList
         """
         temp = []
@@ -53,7 +45,7 @@ class Table(object):
                     temp.append(fastqc.seq_length[-1][0])
         return max(temp)
 
-    def write_header_short(self):
+    def header_short_(self):
         """Writes the header for the short table file
         """
         short_header = ['File Name',
@@ -83,16 +75,16 @@ class Table(object):
                         'MAPQ < 3 or unmapped (%)',
                         'MAPQ < 3 or unmapped']
 
-        self.short_csv.writerow(short_header)
+        self.short_csv.append(short_header)
 
-    def write_header_long(self):
+    def header_long_(self):
         """writes the header for the long table file
         """
-        self.long_csv.writerow(self.first_header_level())
-        self.long_csv.writerow(self.second_header_level())
-        self.long_csv.writerow(self.third_header_level())
+        self.long_csv.append(self.first_header_level_())
+        self.long_csv.append(self.second_header_level_())
+        self.long_csv.append(self.third_header_level_())
 
-    def first_header_level(self):
+    def first_header_level_(self):
         """Generates the first level for the long table's header
 
         Returns:
@@ -106,10 +98,10 @@ class Table(object):
             first_header += empty_slot(19)
         for _ in range(2):
             first_header.append('Number of sequences per quality score')
-            first_header += empty_slot(self.max_qual()-1)
+            first_header += empty_slot(self.max_qual_()-1)
         for _ in range(2):
             first_header.append('Sequence Length Distribution')
-            first_header += empty_slot(self.max_length() - self.min_length())
+            first_header += empty_slot(self.max_length_() - self.min_length_())
         for _ in range(2):
             first_header.append('Sequences duplication levels')
             first_header += empty_slot(10)
@@ -117,7 +109,7 @@ class Table(object):
         first_header += empty_slot(11)
         return first_header
 
-    def second_header_level(self):
+    def second_header_level_(self):
         """Generates the second level for the long table's header
 
         Returns:
@@ -140,8 +132,8 @@ class Table(object):
         #Sequence Length Distribution
         #Sequences duplication levels
         for nb_empty in [19,
-                         self.max_qual() - 1,
-                         self.max_length() - self.min_length(),
+                         self.max_qual_() - 1,
+                         self.max_length_() - self.min_length_(),
                          10]:
             second_header += ['Untrimmed'] + empty_slot(nb_empty)
             second_header += ['Trimmed'] + empty_slot(nb_empty)
@@ -151,7 +143,7 @@ class Table(object):
 
         return second_header
 
-    def third_header_level(self):
+    def third_header_level_(self):
         """Generates the third level for the long table's header
 
         Returns:
@@ -169,18 +161,18 @@ class Table(object):
 
         #Per sequence quality scores
         for _ in range(2):
-            third_header += [str(i) for i in range(self.max_qual())]
+            third_header += [str(i) for i in range(self.max_qual_())]
 
         #Sequence Length Distribution
         for _ in range(2):
-            third_header += [str(i) for i in range(self.min_length(),
-                                                   self.max_length()+1)]
+            third_header += [str(i) for i in range(self.min_length_(),
+                                                   self.max_length_()+1)]
 
         #Sequences duplication levels
         for i in range(2):
             third_header.append('Total')
             third_header += [str(i+1) for i in range(9)]
-            third_header.append('10++')
+            third_header.append('10+')
 
         #MAPQ
         third_header += ["MAPQ >= 30 (%)",
@@ -198,7 +190,7 @@ class Table(object):
 
         return third_header
 
-    def write_table_short(self, matched_list):
+    def table_short_(self, matched_list):
         """Appends the content of the short table for matching
         before/after/sam/meta files
 
@@ -281,9 +273,9 @@ class Table(object):
         else:
             output += empty * 6
 
-        self.short_csv.writerow(output)
+        self.short_csv.append(output)
 
-    def write_table_long(self, matched_list):
+    def table_long_(self, matched_list):
         """Appends the content of the short table for matching
         before/after/sam/meta files
 
@@ -351,7 +343,7 @@ class Table(object):
 
         #Per sequence quality scores
         for fastqc in fastqcs:
-            for i in range(self.max_qual()):
+            for i in range(self.max_qual_()):
                 if fastqc.qual:
                     if i < len(fastqc.qual):
                         output += [str(fastqc.qual[i])]
@@ -362,7 +354,7 @@ class Table(object):
 
         #Sequence Length Distribution
         for fastqc in fastqcs:
-            for i in range(self.min_length(), self.max_length()+1):
+            for i in range(self.min_length_(), self.max_length_()+1):
                 if fastqc.seq_length:
                     if i in [row[0] for row in fastqc.seq_length]:
                         temp = [row[0] for row in fastqc.seq_length]
@@ -379,7 +371,7 @@ class Table(object):
                 for i in fastqc.dup:
                     output += [str(i)]
             else:
-                output += empty * 11
+                output += empty * 17
 
         #MAPQ >=30, >=20, >=10, >=3, < 3, Unmapped  (nb)
         if sam.mapq:
@@ -389,18 +381,18 @@ class Table(object):
             for i in range(6):
                 output += empty*2
 
-        self.long_csv.writerow(output)
+        self.long_csv.append(output)
 
-    def main(self):
+    def make_tables(self):
         """Matches the different lists with one another, based on filename
             and generates the tables
         """
-        self.write_header_short()
-        self.write_header_long()
-
+        self.header_short_()
+        self.header_long_()
         for matched_list in self.matched_lists:
-            self.write_table_short(matched_list)
-            self.write_table_long(matched_list)
+            self.table_short_(matched_list)
+            self.table_long_(matched_list)
+        return self.short_csv, self.long_csv
 
 
 def search_name(matched_list):
