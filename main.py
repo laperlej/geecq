@@ -118,7 +118,7 @@ def launch(input_matrix, output_path):
     output_path = output_path + 'output/'
 
     if has_ntrimmed or has_trimmed:
-        table_short, table_long = Table(input_matrix).main()
+        table_short, table_long = Table(input_matrix).make_tables()
         write_csv(table_short, output_path + 'tableShort.tab')
         write_csv(table_long, output_path + 'tableLong.tab')
     else:
