@@ -3,7 +3,7 @@ Created on January 25, 2014
 
 @author: Jonathan Laperle(jonathan.laperle@usherbrooke.ca)
 """
-import geffq.others as others
+import geecq.others as others
 from itertools import product
 import string
 import subprocess
