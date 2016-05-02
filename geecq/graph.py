@@ -151,6 +151,8 @@ class GraphMaker(object):
         script = 'data<-data.frame('
         for x_value in range(length):
             script += "'%s' = c(" % (self.labels[x_value])
+            for fastqc in self.fastqc_list:
+                print fastqc.dup
             for y_value in [fastqc.dup for fastqc in self.fastqc_list]:
                 script += '%g, ' % (y_value[x_value])
             script = script[:-2] + '),\n\t'
