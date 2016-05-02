@@ -142,13 +142,12 @@ class GraphMaker(object):
         """Generates the Sequence Duplication Levels graph
         """
         fastq_version = self.fastqc_list[0].version
-        lenght=0
         if fastq_version >= 11:
             xlabels = "c('0','1','2','3','4','5','6','7','8','9','>10','>50','>100','>500', '>1k', '>5k', '>10k+')"
-            lenght = 17
+            length = 17
         else:
             xlabels = "c('0','1','2','3','4','5','6','7','8','9','10+')"
-            lenght = 11
+            length = 11
         script = 'data<-data.frame('
         for x_value in range(length):
             script += "'%s' = c(" % (self.labels[x_value])
