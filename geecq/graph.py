@@ -64,7 +64,7 @@ class GraphMaker(object):
         """
         others.write_file(self.path + file_name + '.R', rscript)
         subprocess.call(['Rscript', self.path + file_name + '.R'])
-        #os.remove(self.path + file_name + '.R')
+        os.remove(self.path + file_name + '.R')
 
     def make_per_base_qual_graph(self):
         """Generates the per base quality graph
@@ -142,6 +142,7 @@ class GraphMaker(object):
         """Generates the Sequence Duplication Levels graph
         """
         fastq_version = self.fastqc_list[0].version
+        lenght=0
         if fastq_version >= 11:
             xlabels = "c('0','1','2','3','4','5','6','7','8','9','>10','>50','>100','>500', '>1k', '>5k', '>10k+')"
             lenght = 17
