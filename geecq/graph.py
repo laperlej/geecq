@@ -64,7 +64,7 @@ class GraphMaker(object):
         """
         others.write_file(self.path + file_name + '.R', rscript)
         subprocess.call(['Rscript', self.path + file_name + '.R'])
-        os.remove(self.path + file_name + '.R')
+        #os.remove(self.path + file_name + '.R')
 
     def make_per_base_qual_graph(self):
         """Generates the per base quality graph
