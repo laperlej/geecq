@@ -101,9 +101,9 @@ def no_input():
     print 'Input file is empty.'
 
 def write_csv(table, path):
-    csv = csv.writer(open(path, 'w'), dialect='excel-tab')
+    csv_file = csv.writer(open(path, 'w'), dialect='excel-tab')
     for line in table:
-        csv.writerow(line)
+        csv_file.writerow(line)
 
 def launch(input_matrix, output_path):
     """Does multiple checks to ensure the list has the nessessary data
