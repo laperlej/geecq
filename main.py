@@ -3,11 +3,11 @@ Created on May 8, 2014
 
 @author: Jonathan Laperle(jonathan.laperle@usherbrooke.ca)
 """
-from geffq.fastqc import Fastqc
-from geffq.sam import Sam
-from geffq.meta import Meta
-from geffq.table import Table
-from geffq.graph import GraphMaker
+from geecq.fastqc import Fastqc
+from geecq.sam import Sam
+from geecq.meta import Meta
+from geecq.table import Table
+from geecq.graph import GraphMaker
 import os
 import sys
 import getopt
